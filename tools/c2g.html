@@ -75,9 +75,9 @@
             const lam = Math.atan2(Y, X);
             const lamDeg = toDeg(lam);
 
-            log.push(`<div class="step-container"><div class="step-title">Step 1: Calculate Ground Distance (p)</div><p>Calculate the horizontal distance from the Z-axis using the Pythagorean theorem:</p>$$ p = \\sqrt{X^2 + Y^2} = \\sqrt{${X}^2 + ${Y}^2} = ${p.toFixed(3)}\\text{ meters} $$<p><em>Reason: This gives us the distance from the Earth's rotation axis, needed for latitude and longitude calculations.</em></p></div>`);
+            log.push(`<div class="step-container"><div class="step-title">Step 1: Calculate Ground Distance (p)</div><p>Calculate the horizontal distance from the Z-axis using the Pythagorean theorem:</p>$$ p = \\sqrt{X^2 + Y^2} = \\sqrt{${X}^2 + ${Y}^2} $$<p>p = <span class="result-box">${p.toFixed(3)} meters</span></p><p><em>Reason: This gives us the distance from the Earth's rotation axis, needed for latitude and longitude calculations.</em></p></div>`);
 
-            log.push(`<div class="step-container"><div class="step-title">Step 2: Calculate Longitude (λ)</div><p>Use the arctangent function to find the angle from the X-axis:</p>$$ \\lambda = \\tan^{-1}\\left(\\frac{Y}{X}\\right) = \\tan^{-1}\\left(\\frac{${Y}}{${X}}\\right) = ${lamDeg.toFixed(6)}^\\circ $$<p><em>Reason: Longitude is measured east/west from the prime meridian, which corresponds to the X-axis in Cartesian coordinates.</em></p></div>`);
+            log.push(`<div class="step-container"><div class="step-title">Step 2: Calculate Longitude (λ)</div><p>Use the arctangent function to find the angle from the X-axis:</p>$$ \\lambda = \\tan^{-1}\\left(\\frac{Y}{X}\\right) = \\tan^{-1}\\left(\\frac{${Y}}{${X}}\\right) $$<p>λ = <span class="result-box">${lamDeg.toFixed(6)}°</span></p><p><em>Reason: Longitude is measured east/west from the prime meridian, which corresponds to the X-axis in Cartesian coordinates.</em></p></div>`);
 
             let phi, h;
             if (method === 'bowring') {
@@ -85,23 +85,23 @@
 
                 const theta = Math.atan2(Z * a, p * b);
                 const thetaDeg = toDeg(theta);
-                log.push(`$$ \\theta = ${thetaDeg.toFixed(6)}^\\circ $$<p><em>Reason: Bowring's method uses parametric latitude to handle the ellipsoid's eccentricity more accurately than direct iteration.</em></p></div>`);
+                log.push(`$$ \\theta = ${thetaDeg.toFixed(6)}^\\circ $$<p>θ = <span class="result-box">${thetaDeg.toFixed(6)}°</span></p><p><em>Reason: Bowring's method uses parametric latitude to handle the ellipsoid's eccentricity more accurately than direct iteration.</em></p></div>`);
 
                 log.push(`<div class="step-container"><div class="step-title">Step 4: Bowring's Method - Calculate Latitude (φ)</div><p>Calculate geodetic latitude using Bowring's formula:</p>$$ \\phi = \\tan^{-1}\\left(\\frac{Z + e'^2 \\cdot b \\cdot \\sin^3\\theta}{p - e^2 \\cdot a \\cdot \\cos^3\\theta}\\right) $$`);
 
                 phi = Math.atan2(Z + ep2 * b * Math.pow(Math.sin(theta), 3), p - e2 * a * Math.pow(Math.cos(theta), 3));
                 const phiDeg = toDeg(phi);
-                log.push(`$$ \\phi = \\tan^{-1}\\left(\\frac{${Z} + ${ep2.toFixed(6)} \\cdot ${b} \\cdot \\sin^3${thetaDeg.toFixed(6)}^\\circ}{${p.toFixed(3)} - ${e2.toFixed(6)} \\cdot ${a} \\cdot \\cos^3${thetaDeg.toFixed(6)}^\\circ}\\right) = ${phiDeg.toFixed(6)}^\\circ $$<p><em>Reason: This formula accounts for the Earth's ellipsoidal shape to give accurate latitude coordinates.</em></p></div>`);
+                log.push(`$$ \\phi = \\tan^{-1}\\left(\\frac{${Z} + ${ep2.toFixed(6)} \\cdot ${b} \\cdot \\sin^3${thetaDeg.toFixed(6)}^\\circ}{${p.toFixed(3)} - ${e2.toFixed(6)} \\cdot ${a} \\cdot \\cos^3${thetaDeg.toFixed(6)}^\\circ}\\right) $$<p>φ = <span class="result-box">${phiDeg.toFixed(6)}°</span></p><p><em>Reason: This formula accounts for the Earth's ellipsoidal shape to give accurate latitude coordinates.</em></p></div>`);
 
                 log.push(`<div class="step-container"><div class="step-title">Step 5: Calculate Radius of Curvature (N)</div><p>Calculate the prime vertical radius of curvature at this latitude:</p>$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} = \\frac{${a}}{\\sqrt{1 - ${e2.toFixed(6)} \\cdot \\sin^2${phiDeg.toFixed(6)}^\\circ}} $$`);
 
                 const N = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
-                log.push(`$$ N = ${N.toFixed(3)}\\text{ meters} $$<p><em>Reason: N represents how curved the Earth is at this latitude - larger at equator, smaller at poles.</em></p></div>`);
+                log.push(`$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} $$<p>N = <span class="result-box">${N.toFixed(3)} meters</span></p><p><em>Reason: N represents how curved the Earth is at this latitude - larger at equator, smaller at poles.</em></p></div>`);
 
                 log.push(`<div class="step-container"><div class="step-title">Step 6: Calculate Height (h)</div><p>Calculate ellipsoidal height above the reference ellipsoid:</p>$$ h = \\frac{p}{\\cos\\phi} - N = \\frac{${p.toFixed(3)}}{\\cos${phiDeg.toFixed(6)}^\\circ} - ${N.toFixed(3)} $$`);
 
                 h = (p / Math.cos(phi)) - N;
-                log.push(`$$ h = ${h.toFixed(3)}\\text{ meters} $$<p><em>Reason: Height is the vertical distance from the ellipsoid surface to the point.</em></p></div>`);
+                log.push(`<p>h = <span class="result-box">${h.toFixed(3)} meters</span></p><p><em>Reason: Height is the vertical distance from the ellipsoid surface to the point.</em></p></div>`);
 
             } else {
                 log.push(`<div class="step-container"><div class="step-title">Step 3: Iterative Method - Initial Latitude Estimate</div><p>Start with an initial latitude estimate using a simplified formula:</p>$$ \\phi_0 = \\tan^{-1}\\left(\\frac{Z}{p \\cdot (1 - e^2)}\\right) = \\tan^{-1}\\left(\\frac{${Z}}{${p.toFixed(3)} \\cdot (1 - ${e2.toFixed(6)})}\\right) $$`);
@@ -118,11 +118,9 @@
                     log.push(`<div class="step-container"><div class="step-title">Iteration ${iteration}: Refine Latitude</div><p>Calculate radius of curvature N at current latitude:</p>$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} = \\frac{${a}}{\\sqrt{1 - ${e2.toFixed(6)} \\cdot \\sin^2${phiDeg.toFixed(6)}^\\circ}} $$`);
 
                     N_val = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
-                    log.push(`$$ N = ${N_val.toFixed(3)}\\text{ meters} $$`);
+                    log.push(`<p>N = <span class="result-box">${N_val.toFixed(3)} meters</span></p>`);
 
-                    log.push(`<p>Calculate height estimate:</p>$$ h = \\frac{p}{\\cos\\phi} - N = \\frac{${p.toFixed(3)}}{\\cos${phiDeg.toFixed(6)}^\\circ} - ${N_val.toFixed(3)} = ${(p / Math.cos(phi) - N_val).toFixed(3)}\\text{ m} $$`);
-
-                    h_val = (p / Math.cos(phi)) - N_val;
+                    log.push(`<p>Calculate height estimate:</p>$$ h = \\frac{p}{\\cos\\phi} - N = \\frac{${p.toFixed(3)}}{\\cos${phiDeg.toFixed(6)}^\\circ} - ${N_val.toFixed(3)} $$<p>h = <span class="result-box">${(p / Math.cos(phi) - N_val).toFixed(3)} m</span></p>`);
 
                     log.push(`<p>Update latitude using height correction:</p>$$ \\phi = \\tan^{-1}\\left(\\frac{Z}{p \\cdot (1 - e^2 \\cdot \\frac{N}{N + h})}\\right) $$`);
 
@@ -130,7 +128,7 @@
                     phi = Math.atan2(Z, p * (1 - e2 * (N_val / (N_val + h_val))));
                     phiDeg = toDeg(phi);
 
-                    log.push(`$$ \\phi = \\tan^{-1}\\left(\\frac{${Z}}{${p.toFixed(3)} \\cdot (1 - ${e2.toFixed(6)} \\cdot \\frac{${N_val.toFixed(3)}}{${N_val.toFixed(3)} + ${(p / Math.cos(prevPhi) - N_val).toFixed(3)}})}\\right) = ${phiDeg.toFixed(6)}^\\circ $$<p><em>Reason: Each iteration refines the latitude estimate until convergence.</em></p></div>`);
+                    log.push(`<p>φ = <span class="result-box">${phiDeg.toFixed(6)}°</span></p><p><em>Reason: Each iteration refines the latitude estimate until convergence.</em></p></div>`);
                 }
 
                 h = h_val;

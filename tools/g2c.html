@@ -65,7 +65,7 @@
 
             let log = [];
 
-            log.push(`<div class="step-container"><div class="step-title">Step 1: Convert Angles to Radians</div><p>Convert latitude and longitude from degrees to radians for trigonometric calculations:</p>$$ \\phi = ${phiDeg}^\\circ \\times \\frac{\\pi}{180} = ${toRad(phiDeg).toFixed(6)}\\text{ radians} $$$$ \\lambda = ${lamDeg}^\\circ \\times \\frac{\\pi}{180} = ${toRad(lamDeg).toFixed(6)}\\text{ radians} $$<p><em>Reason: Trigonometric functions in programming typically use radians, not degrees.</em></p></div>`);
+            log.push(`<div class="step-container"><div class="step-title">Step 1: Convert Angles to Radians</div><p>Convert latitude and longitude from degrees to radians for trigonometric calculations:</p>$$ \\phi = ${phiDeg}^\\circ \\times \\frac{\\pi}{180} $$$$ \\lambda = ${lamDeg}^\\circ \\times \\frac{\\pi}{180} $$<p>φ = <span class="result-box">${toRad(phiDeg).toFixed(6)} radians</span>, λ = <span class="result-box">${toRad(lamDeg).toFixed(6)} radians</span></p><p><em>Reason: Trigonometric functions in programming typically use radians, not degrees.</em></p></div>`);
 
             const phi = toRad(phiDeg);
             const lam = toRad(lamDeg);
@@ -73,22 +73,22 @@
             log.push(`<div class="step-container"><div class="step-title">Step 2: Calculate Radius of Curvature (N)</div><p>Calculate the prime vertical radius of curvature at this latitude:</p>$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} = \\frac{${a}}{\\sqrt{1 - ${e2.toFixed(6)} \\cdot \\sin^2${phiDeg}^\\circ}} $$`);
 
             const N = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
-            log.push(`$$ N = ${N.toFixed(3)}\\text{ meters} $$<p><em>Reason: N represents how curved the Earth is at this latitude, needed to account for ellipsoidal shape.</em></p></div>`);
+            log.push(`$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} $$<p>N = <span class="result-box">${N.toFixed(3)} meters</span></p><p><em>Reason: N represents how curved the Earth is at this latitude, needed to account for ellipsoidal shape.</em></p></div>`);
 
             log.push(`<div class="step-container"><div class="step-title">Step 3: Calculate X Coordinate</div><p>X coordinate is the east-west position:</p>$$ X = (N + h) \\cdot \\cos\\phi \\cdot \\cos\\lambda = (${N.toFixed(3)} + ${h}) \\cdot \\cos${phiDeg}^\\circ \\cdot \\cos${lamDeg}^\\circ $$`);
 
             const X = (N + h) * Math.cos(phi) * Math.cos(lam);
-            log.push(`$$ X = ${X.toFixed(3)}\\text{ meters} $$<p><em>Reason: X represents the distance east of the prime meridian, scaled by the Earth's curvature and height.</em></p></div>`);
+            log.push(`<p>X = <span class="result-box">${X.toFixed(3)} meters</span></p><p><em>Reason: X represents the distance east of the prime meridian, scaled by the Earth's curvature and height.</em></p></div>`);
 
             log.push(`<div class="step-container"><div class="step-title">Step 4: Calculate Y Coordinate</div><p>Y coordinate is the north-south position in the equatorial plane:</p>$$ Y = (N + h) \\cdot \\cos\\phi \\cdot \\sin\\lambda = (${N.toFixed(3)} + ${h}) \\cdot \\cos${phiDeg}^\\circ \\cdot \\sin${lamDeg}^\\circ $$`);
 
             const Y = (N + h) * Math.cos(phi) * Math.sin(lam);
-            log.push(`$$ Y = ${Y.toFixed(3)}\\text{ meters} $$<p><em>Reason: Y represents the distance north of the equatorial plane, accounting for longitude.</em></p></div>`);
+            log.push(`<p>Y = <span class="result-box">${Y.toFixed(3)} meters</span></p><p><em>Reason: Y represents the distance north of the equatorial plane, accounting for longitude.</em></p></div>`);
 
             log.push(`<div class="step-container"><div class="step-title">Step 5: Calculate Z Coordinate</div><p>Z coordinate is the height above/below the equatorial plane:</p>$$ Z = [N \\cdot (1 - e^2) + h] \\cdot \\sin\\phi = [${N.toFixed(3)} \\cdot (1 - ${e2.toFixed(6)}) + ${h}] \\cdot \\sin${phiDeg}^\\circ $$`);
 
             const Z = (N * (1 - e2) + h) * Math.sin(phi);
-            log.push(`$$ Z = ${Z.toFixed(3)}\\text{ meters} $$<p><em>Reason: Z accounts for the ellipsoidal flattening - the Earth is slightly flattened at the poles.</em></p></div>`);
+            log.push(`<p>Z = <span class="result-box">${Z.toFixed(3)} meters</span></p><p><em>Reason: Z accounts for the ellipsoidal flattening - the Earth is slightly flattened at the poles.</em></p></div>`);
 
             document.getElementById('outputSection').style.display = 'block';
             document.getElementById('finalResult').innerHTML = `<div class="final-answer-display"><strong>Final Answer</strong> | (X, Y, Z) = <span class="boxed-answer">(${X.toFixed(3)} m, ${Y.toFixed(3)} m, ${Z.toFixed(3)} m)</span></div>`;
