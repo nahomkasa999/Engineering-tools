@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nahomkasa999.github.io/Engineering-tools/sitemap.xml

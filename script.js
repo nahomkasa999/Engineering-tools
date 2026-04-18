@@ -1,11 +1,11 @@
 const data = {
-    "Conversion Tools": [
-        { "name": "Cartesian → Geodetic", "url": "tools/c2g.html" },
-        { "name": "Geodetic → Cartesian", "url": "tools/g2c.html" }
+    "Geodetic Converters": [
+        { "name": "Cartesian to Geodetic (ECEF → Lat/Long)", "url": "tools/c2g.html" },
+        { "name": "Geodetic to Cartesian (Lat/Long → ECEF)", "url": "tools/g2c.html" }
     ],
-    "System": [
-        { "name": "System Welcome", "url": "tools/welcome.html" },
-        { "name": "Getting Started", "url": "notes/getting-started.html" }
+    "Engineering Hub": [
+        { "name": "Professional Surveying Tools", "url": "tools/welcome.html" },
+        { "name": "Engineering Documentation", "url": "notes/getting-started.html" }
     ]
 };
 
