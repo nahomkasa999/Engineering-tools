@@ -4,8 +4,7 @@ const data = {
         { "name": "Geodetic to Cartesian (Lat/Long → ECEF)", "url": "tools/g2c.html" }
     ],
     "Engineering Hub": [
-        { "name": "Professional Surveying Tools", "url": "tools/welcome.html" },
-        { "name": "Engineering Documentation", "url": "notes/getting-started.html" }
+        { "name": "Professional Surveying Tools", "url": "tools/welcome.html" }
     ]
 };
 
@@ -35,7 +34,7 @@ function init() {
         });
         menu.appendChild(section);
     }
-    const defaultUrl = data["System"][0].url;
+    const defaultUrl = data["Engineering Hub"][0].url;
     document.getElementById('tool-view').src = defaultUrl;
     document.querySelectorAll('.nav-link').forEach(l => {
         if (l.dataset.url === defaultUrl) l.classList.add('is-active');
