@@ -3,11 +3,6 @@ const data = {
         { "name": "Cartesian → Geodetic", "url": "tools/c2g.html" },
         { "name": "Geodetic → Cartesian", "url": "tools/g2c.html" }
     ],
-    "Library & Resources": [
-        { "name": "Surveying Manual (PDF)", "url": "assets/docs/Surveying_Manual.pdf" },
-        { "name": "Hydraulics Essentials (PDF)", "url": "assets/docs/Hydraulics_Essentials.pdf" },
-        { "name": "Reference Image", "url": "assets/images/reference-img.jpg" }
-    ],
     "System": [
         { "name": "System Welcome", "url": "tools/welcome.html" },
         { "name": "Getting Started", "url": "notes/getting-started.html" }
