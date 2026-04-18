@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Coordinate Converter</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']], processEscapes: true },
+            options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="../css/eng-hub.css">
+</head>
+<body class="tool-page">
+
+    <h1>Coordinate Converter</h1>
+
+    <div class="config-panel">
+        <label>Reference Ellipsoid</label>
+        <select id="ellipsoidSelect">
+            <option value="WGS84">WGS 84 (GPS Standard)</option>
+            <option value="GRS80">GRS 80</option>
+            <option value="CLARKE1866">Clarke 1866</option>
+            <option value="KRASSOVSKY">Krassovsky 1940</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h2>Cartesian → Geodetic</h2>
+            <label>X (meters)</label>
+            <input type="number" id="cX" value="4510731">
+            <label>Y (meters)</label>
+            <input type="number" id="cY" value="4510731">
+            <label>Z (meters)</label>
+            <input type="number" id="cZ" value="0">
+            
+            <label>Method</label>
+            <select id="methodSelect">
+                <option value="bowring">Bowring's Method (Exact)</option>
+                <option value="iterative">Iterative Method</option>
+            </select>
+            
+            <button onclick="convertC2G()">Calculate Geodetic</button>
+        </div>
+
+        <div class="panel">
+            <h2>Geodetic → Cartesian</h2>
+            <label>Latitude [Φ] (degrees)</label>
+            <input type="number" id="gRho" value="0">
+            <label>Longitude [λ] (degrees)</label>
+            <input type="number" id="gLambda" value="45">
+            <label>Height [h] (meters)</label>
+            <input type="number" id="gH" value="0">
+            
+            <button onclick="convertG2C()">Calculate Cartesian</button>
+        </div>
+    </div>
+
+    <div class="output-panel" id="outputSection" style="display: none;">
+        <div class="final-result-box">
+            <div class="final-result-title">Resulting Coordinates</div>
+            <div class="final-result" id="finalResult"></div>
+        </div>
+        
+        <h2>Process Derivation</h2>
+        <div id="explanationText"></div>
+    </div>
+
+    <script>
+        const ellipsoids = {
+            "WGS84": { a: 6378137.0, invF: 298.257223563 },
+            "GRS80": { a: 6378137.0, invF: 298.257222101 },
+            "CLARKE1866": { a: 6378206.4, b: 6356583.8 },
+            "KRASSOVSKY": { a: 6378245.0, invF: 298.3 }
+        };
+
+        function getEllipsoidParams() {
+            const key = document.getElementById('ellipsoidSelect').value;
+            const e = ellipsoids[key];
+            const a = e.a;
+            let f, b;
+            
+            if (e.b) {
+                b = e.b;
+                f = (a - b) / a;
+            } else {
+                f = 1 / e.invF;
+                b = a * (1 - f);
+            }
+            
+            const e2 = 2 * f - (f * f);
+            const ep2 = (a * a - b * b) / (b * b);
+            
+            return { a, b, f, e2, ep2, name: key };
+        }
+
+        function toRad(deg) { return deg * Math.PI / 180.0; }
+        function toDeg(rad) { return rad * 180.0 / Math.PI; }
+
+        function showOutput(finalText, htmlLog) {
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('finalResult').innerText = finalText;
+            document.getElementById('explanationText').innerHTML = htmlLog.join('');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('explanationText')]);
+            }
+        }
+
+        function convertG2C() {
+            const phiDeg = parseFloat(document.getElementById('gRho').value);
+            const lamDeg = parseFloat(document.getElementById('gLambda').value);
+            const h = parseFloat(document.getElementById('gH').value);
+            
+            const params = getEllipsoidParams();
+            const {a, e2, name} = params;
+            
+            let log = [];
+            log.push(`<div class="step-container"><div class="step-title">Initial Parameters (${name})</div>
+                      $$ a = ${a} \\text{ m} $$
+                      $$ e^2 = ${e2.toFixed(8)} $$
+                      $$ \\phi = ${phiDeg}^\\circ, \\quad \\lambda = ${lamDeg}^\\circ, \\quad h = ${h} \\text{ m} $$</div>`);
+
+            const phi = toRad(phiDeg);
+            const lam = toRad(lamDeg);
+
+            const sinPhi = Math.sin(phi);
+            const cosPhi = Math.cos(phi);
+            const N = a / Math.sqrt(1 - e2 * sinPhi * sinPhi);
+            
+            log.push(`<div class="step-container"><div class="step-title">Step 1: Calculate Prime Vertical Radius of Curvature (\( N \))</div>
+                      $$ N = \\frac{a}{\\sqrt{1 - e^2 \\sin^2(\\phi)}} $$
+                      $$ N = \\frac{${a}}{\\sqrt{1 - (${e2.toFixed(8)}) \\cdot \\sin^2(${phiDeg}^\\circ)}} = ${N.toFixed(3)} \\text{ m} $$</div>`);
+
+            const X = (N + h) * cosPhi * Math.cos(lam);
+            const Y = (N + h) * cosPhi * Math.sin(lam);
+            const Z = (N * (1 - e2) + h) * sinPhi;
+
+            log.push(`<div class="step-container"><div class="step-title">Step 2: Calculate Cartesian Vector (X, Y, Z)</div>
+                      $$ X = (N + h) \\cos(\\phi) \\cos(\\lambda) = ${X.toFixed(3)} $$
+                      $$ Y = (N + h) \\cos(\\phi) \\sin(\\lambda) = ${Y.toFixed(3)} $$
+                      $$ Z = (N(1 - e^2) + h) \\sin(\\phi) = ${Z.toFixed(3)} $$</div>`);
+
+            const finalText = `X: ${X.toFixed(3)} m | Y: ${Y.toFixed(3)} m | Z: ${Z.toFixed(3)} m`;
+            showOutput(finalText, log);
+        }
+
+        function convertC2G() {
+            const X = parseFloat(document.getElementById('cX').value);
+            const Y = parseFloat(document.getElementById('cY').value);
+            const Z = parseFloat(document.getElementById('cZ').value);
+            const method = document.getElementById('methodSelect').value;
+
+            const params = getEllipsoidParams();
+            const {a, b, e2, ep2, name} = params;
+
+            let log = [];
+            log.push(`<div class="step-container"><div class="step-title">Initial Parameters (${name})</div>
+                      $$ X = ${X}, \\quad Y = ${Y}, \\quad Z = ${Z} $$</div>`);
+
+            const p = Math.sqrt(X * X + Y * Y);
+            const lam = Math.atan2(Y, X);
+            const lamDeg = toDeg(lam);
+
+            log.push(`<div class="step-container"><div class="step-title">Step 1: Calculate Longitude (\( \\lambda \))</div>
+                      $$ \\lambda = \\arctan\\left(\\frac{Y}{X}\\right) = ${lamDeg.toFixed(6)}^\\circ $$</div>`);
+
+            let phi, h;
+
+            if (method === 'bowring') {
+                const theta = Math.atan2(Z * a, p * b);
+                const sinTheta3 = Math.pow(Math.sin(theta), 3);
+                const cosTheta3 = Math.pow(Math.cos(theta), 3);
+                phi = Math.atan2(Z + ep2 * b * sinTheta3, p - e2 * a * cosTheta3);
+                const sinPhi = Math.sin(phi);
+                const N = a / Math.sqrt(1 - e2 * sinPhi * sinPhi);
+                h = (p / Math.cos(phi)) - N;
+
+                log.push(`<div class="step-container"><div class="step-title">Step 2: Bowring's Closed-Form Transformation</div>
+                          $$ \\theta = \\arctan\\left(\\frac{Z a}{p b}\\right) = ${toDeg(theta).toFixed(6)}^\\circ $$
+                          $$ \\phi = ${toDeg(phi).toFixed(6)}^\\circ $$
+                          $$ h = ${h.toFixed(3)} \\text{ m} $$</div>`);
+            } else {
+                phi = Math.atan2(Z, p * (1 - e2)); 
+                let N_val, diff = 1, iteration = 0;
+                while (diff > 1e-12 && iteration < 5) {
+                    iteration++;
+                    let sinPhi = Math.sin(phi);
+                    N_val = a / Math.sqrt(1 - e2 * sinPhi * sinPhi);
+                    h = (p / Math.cos(phi)) - N_val;
+                    let phi_new = Math.atan2(Z, p * (1 - e2 * (N_val / (N_val + h))));
+                    diff = Math.abs(phi_new - phi);
+                    phi = phi_new;
+                }
+                log.push(`<div class="step-container"><div class="step-title">Step 2: Iterative Transformation</div>
+                          $$ \\text{Converged in } ${iteration} \\text{ steps} $$
+                          $$ \\phi = ${toDeg(phi).toFixed(6)}^\\circ $$
+                          $$ h = ${h.toFixed(3)} \\text{ m} $$</div>`);
+            }
+
+            const phiDeg = toDeg(phi);
+            const finalText = `Φ: ${phiDeg.toFixed(6)}° | λ: ${lamDeg.toFixed(6)}° | h: ${h.toFixed(3)} m`;
+            showOutput(finalText, log);
+        }
+    </script>
+</body>
+</html>

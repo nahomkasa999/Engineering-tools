@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" class="shell-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Engineering Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="shell">
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>Eng-Hub</h1>
+                <button id="sidebar-toggle" aria-label="Toggle Sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
+            <nav id="nav-menu" aria-label="Main">
+                <!-- Navigation will be dynamically loaded here -->
+            </nav>
+        </aside>
+        <main class="content">
+            <iframe id="tool-view" name="tool-view" title="Tool workspace" src="about:blank"></iframe>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

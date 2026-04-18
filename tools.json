@@ -1,0 +1,9 @@
+{
+    "Engineering Tools": [
+        { "name": "Coordinate Converter", "url": "tools/converter.html" },
+        { "name": "Tool Placeholder", "url": "tools/welcome.html" }
+    ],
+    "Notes & Docs": [
+        { "name": "Getting Started", "url": "notes/getting-started.html" }
+    ]
+}

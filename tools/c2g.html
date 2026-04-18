@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cartesian to Geodetic</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$']], processEscapes: true },
+            options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="../css/eng-hub.css">
+</head>
+<body class="tool-page">
+    <h1>Cartesian → Geodetic Converter</h1>
+
+    <div class="config-panel">
+        <label>Reference Ellipsoid</label>
+        <select id="ellipsoidSelect">
+            <option value="WGS84">WGS 84</option>
+            <option value="GRS80">GRS 80</option>
+            <option value="CLARKE1866">Clarke 1866</option>
+            <option value="KRASSOVSKY">Krassovsky 1940</option>
+        </select>
+    </div>
+
+    <div class="panel">
+        <label>X (meters)</label>
+        <input type="number" id="cX" value="4510731">
+        <label>Y (meters)</label>
+        <input type="number" id="cY" value="4510731">
+        <label>Z (meters)</label>
+        <input type="number" id="cZ" value="0">
+        <label>Method</label>
+        <select id="methodSelect">
+            <option value="bowring">Bowring's Method (Exact)</option>
+            <option value="iterative">Iterative Method</option>
+        </select>
+        <button onclick="convertC2G()">Convert to Geodetic</button>
+    </div>
+
+    <div class="output-panel" id="outputSection" style="display: none;">
+        <div id="finalResult"></div>
+        <div id="explanationText"></div>
+    </div>
+
+    <script>
+        const ellipsoids = { "WGS84": { a: 6378137.0, invF: 298.257223563 }, "GRS80": { a: 6378137.0, invF: 298.257222101 }, "CLARKE1866": { a: 6378206.4, b: 6356583.8 }, "KRASSOVSKY": { a: 6378245.0, invF: 298.3 } };
+
+        function getEllipsoidParams() {
+            const key = document.getElementById('ellipsoidSelect').value;
+            const e = ellipsoids[key];
+            const a = e.a;
+            let f, b;
+            if (e.b) { b = e.b; f = (a - b) / a; } else { f = 1 / e.invF; b = a * (1 - f); }
+            const e2 = 2 * f - (f * f);
+            const ep2 = (a * a - b * b) / (b * b);
+            return { a, b, f, e2, ep2, name: key };
+        }
+
+        function toDeg(rad) { return rad * 180.0 / Math.PI; }
+
+        function convertC2G() {
+            const X = parseFloat(document.getElementById('cX').value);
+            const Y = parseFloat(document.getElementById('cY').value);
+            const Z = parseFloat(document.getElementById('cZ').value);
+            const method = document.getElementById('methodSelect').value;
+            const params = getEllipsoidParams();
+            const {a, b, e2, ep2, name} = params;
+
+            let log = [];
+            const p = Math.sqrt(X * X + Y * Y);
+            const lam = Math.atan2(Y, X);
+            const lamDeg = toDeg(lam);
+
+            log.push(`<div class="step-container"><div class="step-title">Step 1: Calculate Ground Distance (p)</div><p>Calculate the horizontal distance from the Z-axis using the Pythagorean theorem:</p>$$ p = \\sqrt{X^2 + Y^2} = \\sqrt{${X}^2 + ${Y}^2} = ${p.toFixed(3)}\\text{ meters} $$<p><em>Reason: This gives us the distance from the Earth's rotation axis, needed for latitude and longitude calculations.</em></p></div>`);
+
+            log.push(`<div class="step-container"><div class="step-title">Step 2: Calculate Longitude (λ)</div><p>Use the arctangent function to find the angle from the X-axis:</p>$$ \\lambda = \\tan^{-1}\\left(\\frac{Y}{X}\\right) = \\tan^{-1}\\left(\\frac{${Y}}{${X}}\\right) = ${lamDeg.toFixed(6)}^\\circ $$<p><em>Reason: Longitude is measured east/west from the prime meridian, which corresponds to the X-axis in Cartesian coordinates.</em></p></div>`);
+
+            let phi, h;
+            if (method === 'bowring') {
+                log.push(`<div class="step-container"><div class="step-title">Step 3: Bowring's Method - Calculate θ</div><p>First, calculate the parametric latitude θ:</p>$$ \\theta = \\tan^{-1}\\left(\\frac{Z \\cdot a}{p \\cdot b}\\right) = \\tan^{-1}\\left(\\frac{${Z} \\cdot ${a}}{${p.toFixed(3)} \\cdot ${b}}\\right) $$`);
+
+                const theta = Math.atan2(Z * a, p * b);
+                const thetaDeg = toDeg(theta);
+                log.push(`$$ \\theta = ${thetaDeg.toFixed(6)}^\\circ $$<p><em>Reason: Bowring's method uses parametric latitude to handle the ellipsoid's eccentricity more accurately than direct iteration.</em></p></div>`);
+
+                log.push(`<div class="step-container"><div class="step-title">Step 4: Bowring's Method - Calculate Latitude (φ)</div><p>Calculate geodetic latitude using Bowring's formula:</p>$$ \\phi = \\tan^{-1}\\left(\\frac{Z + e'^2 \\cdot b \\cdot \\sin^3\\theta}{p - e^2 \\cdot a \\cdot \\cos^3\\theta}\\right) $$`);
+
+                phi = Math.atan2(Z + ep2 * b * Math.pow(Math.sin(theta), 3), p - e2 * a * Math.pow(Math.cos(theta), 3));
+                const phiDeg = toDeg(phi);
+                log.push(`$$ \\phi = \\tan^{-1}\\left(\\frac{${Z} + ${ep2.toFixed(6)} \\cdot ${b} \\cdot \\sin^3${thetaDeg.toFixed(6)}^\\circ}{${p.toFixed(3)} - ${e2.toFixed(6)} \\cdot ${a} \\cdot \\cos^3${thetaDeg.toFixed(6)}^\\circ}\\right) = ${phiDeg.toFixed(6)}^\\circ $$<p><em>Reason: This formula accounts for the Earth's ellipsoidal shape to give accurate latitude coordinates.</em></p></div>`);
+
+                log.push(`<div class="step-container"><div class="step-title">Step 5: Calculate Radius of Curvature (N)</div><p>Calculate the prime vertical radius of curvature at this latitude:</p>$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} = \\frac{${a}}{\\sqrt{1 - ${e2.toFixed(6)} \\cdot \\sin^2${phiDeg.toFixed(6)}^\\circ}} $$`);
+
+                const N = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
+                log.push(`$$ N = ${N.toFixed(3)}\\text{ meters} $$<p><em>Reason: N represents how curved the Earth is at this latitude - larger at equator, smaller at poles.</em></p></div>`);
+
+                log.push(`<div class="step-container"><div class="step-title">Step 6: Calculate Height (h)</div><p>Calculate ellipsoidal height above the reference ellipsoid:</p>$$ h = \\frac{p}{\\cos\\phi} - N = \\frac{${p.toFixed(3)}}{\\cos${phiDeg.toFixed(6)}^\\circ} - ${N.toFixed(3)} $$`);
+
+                h = (p / Math.cos(phi)) - N;
+                log.push(`$$ h = ${h.toFixed(3)}\\text{ meters} $$<p><em>Reason: Height is the vertical distance from the ellipsoid surface to the point.</em></p></div>`);
+
+            } else {
+                log.push(`<div class="step-container"><div class="step-title">Step 3: Iterative Method - Initial Latitude Estimate</div><p>Start with an initial latitude estimate using a simplified formula:</p>$$ \\phi_0 = \\tan^{-1}\\left(\\frac{Z}{p \\cdot (1 - e^2)}\\right) = \\tan^{-1}\\left(\\frac{${Z}}{${p.toFixed(3)} \\cdot (1 - ${e2.toFixed(6)})}\\right) $$`);
+
+                phi = Math.atan2(Z, p * (1 - e2));
+                let phiDeg = toDeg(phi);
+                log.push(`$$ \\phi_0 = ${phiDeg.toFixed(6)}^\\circ $$<p><em>Reason: We start with an approximation that gets refined through iteration.</em></p></div>`);
+
+                let iteration = 0;
+                let N_val, h_val;
+                while (iteration < 5) {
+                    iteration++;
+
+                    log.push(`<div class="step-container"><div class="step-title">Iteration ${iteration}: Refine Latitude</div><p>Calculate radius of curvature N at current latitude:</p>$$ N = \\frac{a}{\\sqrt{1 - e^2 \\cdot \\sin^2\\phi}} = \\frac{${a}}{\\sqrt{1 - ${e2.toFixed(6)} \\cdot \\sin^2${phiDeg.toFixed(6)}^\\circ}} $$`);
+
+                    N_val = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
+                    log.push(`$$ N = ${N_val.toFixed(3)}\\text{ meters} $$`);
+
+                    log.push(`<p>Calculate height estimate:</p>$$ h = \\frac{p}{\\cos\\phi} - N = \\frac{${p.toFixed(3)}}{\\cos${phiDeg.toFixed(6)}^\\circ} - ${N_val.toFixed(3)} = ${(p / Math.cos(phi) - N_val).toFixed(3)}\\text{ m} $$`);
+
+                    h_val = (p / Math.cos(phi)) - N_val;
+
+                    log.push(`<p>Update latitude using height correction:</p>$$ \\phi = \\tan^{-1}\\left(\\frac{Z}{p \\cdot (1 - e^2 \\cdot \\frac{N}{N + h})}\\right) $$`);
+
+                    const prevPhi = phi;
+                    phi = Math.atan2(Z, p * (1 - e2 * (N_val / (N_val + h_val))));
+                    phiDeg = toDeg(phi);
+
+                    log.push(`$$ \\phi = \\tan^{-1}\\left(\\frac{${Z}}{${p.toFixed(3)} \\cdot (1 - ${e2.toFixed(6)} \\cdot \\frac{${N_val.toFixed(3)}}{${N_val.toFixed(3)} + ${(p / Math.cos(prevPhi) - N_val).toFixed(3)}})}\\right) = ${phiDeg.toFixed(6)}^\\circ $$<p><em>Reason: Each iteration refines the latitude estimate until convergence.</em></p></div>`);
+                }
+
+                h = h_val;
+                log.push(`<div class="step-container"><div class="step-title">Final Results</div><p>Converged after ${iteration} iterations:</p>$$ \\phi = ${phiDeg.toFixed(6)}^\\circ, \\quad h = ${h.toFixed(3)}\\text{ m} $$</div>`);
+            }
+
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('finalResult').innerHTML = `<div class="final-answer-display"><strong>Final Answer</strong> | (ρ, λ, h) = <span class="boxed-answer">(${toDeg(phi).toFixed(6)}°, ${lamDeg.toFixed(6)}°, ${h.toFixed(3)} m)</span></div>`;
+            document.getElementById('explanationText').innerHTML = log.join('');
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById('explanationText')]);
+        }
+    </script>
+</body>
+</html>
